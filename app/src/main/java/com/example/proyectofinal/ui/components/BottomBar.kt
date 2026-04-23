@@ -40,7 +40,7 @@ fun BottomBar(navController: NavHostController) {
             )
         }
 
-        IconButton(onClick = { navController.navigate(Routes.PRODUCTO) }) {
+        IconButton(onClick = { navController.navigate(Routes.SCAN) }) {
             Icon(
                 Icons.Default.Add,
                 contentDescription = "Scan",

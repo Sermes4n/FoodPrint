@@ -12,9 +12,10 @@ import com.example.proyectofinal.ui.screens.ProductoScreen
 
 object Routes {
     const val LOGIN = "login"
+    const val REGISTER = "register"
     const val HOME = "home"
+    const val SCAN = "scan"
     const val PRODUCTO = "producto"
-
     const val HISTORIAL = "historial"
     const val CUENTA = "cuenta"
 }
@@ -30,7 +31,8 @@ fun NavGraph() {
 
         composable(Routes.LOGIN) {
             LoginScreen(
-                onLoginClick = { navController.navigate(Routes.HOME) }
+                onLoginClick = { navController.navigate(Routes.HOME) },
+                onRegisterClick = { navController.navigate(Routes.REGISTER) }
             )
         }
 
