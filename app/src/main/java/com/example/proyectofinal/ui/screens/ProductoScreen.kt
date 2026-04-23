@@ -1,5 +1,7 @@
 package com.example.proyectofinal.ui.screens
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -18,15 +20,51 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.foundation.shape.RoundedCornerShape
-import com.example.proyectofinal.ui.components.AppCard
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import androidx.wear.compose.material.AppCard
 import com.example.proyectofinal.ui.components.CameraViewModel
+import com.example.proyectofinal.ui.components.StatsViewModel
+import com.example.proyectofinal.utils.BarcodeUtils
+import com.example.proyectofinal.utils.LocationUtils
+import com.example.proyectofinal.utils.obtenerUbicacion
 
+
+@RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProductoScreen(onVolverClick: () -> Unit) {
+fun ProductoScreen(onVolverClick: () -> Unit, viewModel: CameraViewModel, statsViewModel: StatsViewModel) {
 
-    val viewModel: CameraViewModel = viewModel()
     val image = viewModel.imageBitmap
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+
+        // EJEMPLO código de barras (simulado)
+        val ean = "9412345678901"
+
+        val pais = BarcodeUtils.obtenerPaisDesdeEAN(ean)
+        val (latProd, lonProd) = LocationUtils.obtenerCoordenadasPais(pais)
+
+        obtenerUbicacion(context) { userLocation ->
+
+            val distancia = LocationUtils.calcularDistancia(
+                userLocation.latitude,
+                userLocation.longitude,
+                latProd,
+                lonProd
+            )
+
+            val co2 = distancia * 0.002
+            val esKm0 = distancia < 100
+
+            statsViewModel.agregarProducto(
+                co2 = co2,
+                km = distancia,
+                esKm0 = esKm0
+            )
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -71,6 +109,7 @@ fun ProductoScreen(onVolverClick: () -> Unit) {
                         .height(200.dp)
                 )
             }
+            Text("Imagen: ${image != null}")
 
             Row(
                 modifier = Modifier.fillMaxWidth(),

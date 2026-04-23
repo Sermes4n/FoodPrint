@@ -21,7 +21,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.proyectofinal.ui.components.AppCard
+import androidx.wear.compose.material.AppCard
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

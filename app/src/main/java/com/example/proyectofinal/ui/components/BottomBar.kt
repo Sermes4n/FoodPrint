@@ -40,10 +40,10 @@ fun BottomBar(navController: NavHostController) {
             )
         }
 
-        IconButton(onClick = { navController.navigate(Routes.SCAN) }) {
+        IconButton(onClick = { navController.navigate(Routes.STATS) }) {
             Icon(
                 Icons.Default.Add,
-                contentDescription = "Scan",
+                contentDescription = "Stats",
                 tint = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.size(28.dp)
             )
