@@ -1,5 +1,6 @@
 package com.example.proyectofinal.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -11,13 +12,19 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyectofinal.ui.components.CameraViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductoScreen(onVolverClick: () -> Unit) {
+
+    val viewModel: CameraViewModel = viewModel()
+    val image = viewModel.imageBitmap
 
     Scaffold(
         topBar = {
@@ -52,6 +59,19 @@ fun ProductoScreen(onVolverClick: () -> Unit) {
                     Text("Origen: Nueva Zelanda (Auckland)", fontSize = 14.sp)
                 }
             }
+
+            if (image != null) {
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Image(
+                    bitmap = image.asImageBitmap(),
+                    contentDescription = "Foto producto",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                )
+            }
+
 
             Spacer(modifier = Modifier.height(12.dp))
 

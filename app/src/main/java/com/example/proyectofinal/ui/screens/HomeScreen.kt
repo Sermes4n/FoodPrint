@@ -1,5 +1,9 @@
 package com.example.proyectofinal.ui.screens
 
+import android.Manifest
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -10,20 +14,48 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.proyectofinal.navigation.Routes
 import com.example.proyectofinal.R
+import com.example.proyectofinal.ui.components.CameraViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(onEscanearClick: () -> Unit) {
+
+    val context = LocalContext.current
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    val viewModel: CameraViewModel = viewModel()
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicturePreview()
+    ) { bitmap ->
+        if (bitmap != null) {
+            viewModel.imageBitmap = bitmap
+            onEscanearClick()
+        }
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            launcher.launch(null)
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -94,8 +126,27 @@ fun HomeScreen(onEscanearClick: () -> Unit) {
 
             Spacer(modifier = Modifier.weight(1f))
 
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp),
+                onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) }
+            ) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Abrir cámara",
+                        modifier = Modifier.size(50.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
             Button(
-                onClick = onEscanearClick,
+                onClick =  {permissionLauncher.launch(Manifest.permission.CAMERA)},
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(60.dp)
@@ -111,38 +162,3 @@ fun HomeScreen(onEscanearClick: () -> Unit) {
     }
 }
 
-@Composable
-fun BottomBar(navController: NavHostController) {
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(12.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly
-    ) {
-
-        IconButton(onClick = {
-            navController.navigate(Routes.HOME)
-        }) {
-            Icon(Icons.Default.Home, contentDescription = "Home")
-        }
-
-        IconButton(onClick = {
-            navController.navigate(Routes.PRODUCTO)
-        }) {
-            Icon(Icons.Default.Add, contentDescription = "Scan")
-        }
-
-        IconButton(onClick = {
-            navController.navigate(Routes.HISTORIAL)
-        }) {
-            Icon(Icons.Default.Refresh, contentDescription = "Historial")
-        }
-
-        IconButton(onClick = {
-            navController.navigate(Routes.CUENTA)
-        }) {
-            Icon(Icons.Default.Person, contentDescription = "Cuenta")
-        }
-    }
-}
