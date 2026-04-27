@@ -19,7 +19,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.proyectofinal.ui.components.AppCard
 
 private data class ProductoHistorial(
     val nombre: String,
@@ -81,7 +80,7 @@ fun HistorialScreen() {
             ) {
 
                 item {
-                    AppCard(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                    Card(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(16.dp),
                             horizontalArrangement = Arrangement.SpaceEvenly
@@ -151,7 +150,7 @@ private fun ProductoCard(producto: ProductoHistorial, modifier: Modifier = Modif
         else                -> MaterialTheme.colorScheme.error to "Alto"
     }
 
-    AppCard(modifier = modifier.fillMaxWidth()) {
+    Card(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically

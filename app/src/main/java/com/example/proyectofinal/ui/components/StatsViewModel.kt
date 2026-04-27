@@ -12,7 +12,7 @@ class StatsViewModel : ViewModel() {
     var productosKm0 by mutableStateOf(0)
     var totalProductos by mutableStateOf(0)
 
-    fun agregarProducto(co2: Double, km: Double, esKm0: Boolean) {
+    fun agregarProducto(co2: Double, km: Float, esKm0: Boolean) {
         co2Ahorrado += co2
         kmReducidos += km
         totalProductos++

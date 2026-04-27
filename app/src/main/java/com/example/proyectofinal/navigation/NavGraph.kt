@@ -1,66 +1,91 @@
 package com.example.proyectofinal.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.*
+
+import com.example.proyectofinal.ui.components.BottomBar
 import com.example.proyectofinal.ui.components.CameraViewModel
-import com.example.proyectofinal.ui.screens.CuentaScreen
-import com.example.proyectofinal.ui.screens.HistorialScreen
-import com.example.proyectofinal.ui.screens.HomeScreen
-import com.example.proyectofinal.ui.screens.LoginScreen
-import com.example.proyectofinal.ui.screens.ProductoScreen
+import com.example.proyectofinal.ui.components.StatsViewModel
+
+import com.example.proyectofinal.ui.screens.*
 
 object Routes {
     const val LOGIN = "login"
-    const val REGISTER = "register"
     const val HOME = "home"
-    const val SCAN = "scan"
     const val PRODUCTO = "producto"
     const val HISTORIAL = "historial"
     const val CUENTA = "cuenta"
-
     const val STATS = "stats"
-
 }
+
+@RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
 @Composable
 fun NavGraph() {
 
     val navController = rememberNavController()
+
     val cameraViewModel: CameraViewModel = viewModel()
+    val statsViewModel: StatsViewModel = viewModel()
 
-    NavHost(
-        navController = navController,
-        startDestination = Routes.LOGIN
-    ) {
-
-        composable(Routes.LOGIN) {
-            LoginScreen(
-                onLoginClick = { navController.navigate(Routes.HOME) },
-                onRegisterClick = { navController.navigate(Routes.REGISTER) }
-            )
+    Scaffold(
+        bottomBar = {
+            BottomBar(navController)
         }
+    ) { padding ->
 
-        composable(Routes.HOME) {
-            HomeScreen(
-                onEscanearClick = { navController.navigate(Routes.PRODUCTO) },
-            )
+        NavHost(
+            navController = navController,
+            startDestination = Routes.LOGIN,
+            modifier = Modifier.padding(padding)
+        ) {
+
+            composable(Routes.LOGIN) {
+                LoginScreen(
+                    onLoginClick = { navController.navigate(Routes.HOME) },
+                    onRegisterClick = {}
+                )
+            }
+
+            composable(Routes.HOME) {
+                HomeScreen(
+                    onEscanearClick = {
+                        navController.navigate(Routes.PRODUCTO)
+                    }
+                )
+            }
+
+            composable(Routes.PRODUCTO) {
+                ProductoScreen(
+                    onVolverClick = { navController.popBackStack() },
+                    cameraViewModel = cameraViewModel,
+                    statsViewModel = statsViewModel
+                )
+            }
+
+            composable(Routes.STATS) {
+                StatsScreen(statsViewModel)
+            }
+
+            composable(Routes.HISTORIAL) {
+                HistorialScreen()
+            }
+
+            composable(Routes.CUENTA) {
+                CuentaScreen(
+                    onLogoutClick = {
+                        navController.navigate(Routes.LOGIN) {
+                            popUpTo(0)
+                        }
+                    }
+                )
+            }
         }
-
-        composable(Routes.PRODUCTO) {
-            ProductoScreen(
-                onVolverClick = { navController.popBackStack() },
-                viewModel = cameraViewModel
-            )
-        }
-
-        /*composable(Routes.HISTORIAL) {
-            HistorialScreen(navController)
-        }
-
-        composable(Routes.CUENTA) {
-            CuentaScreen(navController)
-        }*/
     }
 }
+

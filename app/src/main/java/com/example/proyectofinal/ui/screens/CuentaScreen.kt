@@ -111,7 +111,7 @@ fun CuentaScreen(onLogoutClick: () -> Unit) {
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
             )
 
-            AppCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+            Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
                 Column {
                     ProfileRow(icon = Icons.Default.Person, label = "Nombre",         value = "Ismail Er Rifaiy")
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
@@ -141,7 +141,7 @@ fun CuentaScreen(onLogoutClick: () -> Unit) {
 
 @Composable
 private fun StatItem(modifier: Modifier = Modifier, value: String, label: String) {
-    AppCard(modifier = modifier) {
+    Card(modifier = modifier) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally

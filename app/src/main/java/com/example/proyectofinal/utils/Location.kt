@@ -5,7 +5,7 @@ object LocationUtils {
     fun calcularDistancia(
         lat1: Double, lon1: Double,
         lat2: Double, lon2: Double
-    ): Double {
+    ): Float {
 
         val results = FloatArray(1)
         android.location.Location.distanceBetween(

@@ -15,7 +15,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             EcoScannerTheme {
-                MainScreen()
+                NavGraph()
             }
         }
     }

@@ -18,16 +18,13 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
-import androidx.wear.compose.material.AppCard
 import com.example.proyectofinal.ui.components.CameraViewModel
 import com.example.proyectofinal.ui.components.StatsViewModel
-import com.example.proyectofinal.utils.BarcodeUtils
 import com.example.proyectofinal.utils.LocationUtils
-import com.example.proyectofinal.utils.obtenerUbicacion
+import com.example.proyectofinal.utils.obtenerUbicacionSuspend
 
 
 @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
@@ -39,30 +36,47 @@ fun ProductoScreen(onVolverClick: () -> Unit, viewModel: CameraViewModel, statsV
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
+        val bitmap = viewModel.imageBitmap
 
-        // EJEMPLO código de barras (simulado)
-        val ean = "9412345678901"
+        if (bitmap != null) {
+            // 1. Escanear código de barras
+            val codigoBarras = BarcodeApiUtils.escanearCodigoBarras(bitmap)
 
-        val pais = BarcodeUtils.obtenerPaisDesdeEAN(ean)
-        val (latProd, lonProd) = LocationUtils.obtenerCoordenadasPais(pais)
+            if (codigoBarras != null) {
+                try {
+                    // 2. LLAMADA HTTP A API (esto es lo que piden en la semana 3)
+                    val productoInfo = MockApi.obtenerProductoMock(codigoBarras)
 
-        obtenerUbicacion(context) { userLocation ->
+                    if (productoInfo != null) {
+                        val pais = productoInfo.paisOrigen
+                        val nombre = productoInfo.nombre
 
-            val distancia = LocationUtils.calcularDistancia(
-                userLocation.latitude,
-                userLocation.longitude,
-                latProd,
-                lonProd
-            )
+                        // 3. Obtener ubicación con GPS
+                        val ubicacion = obtenerUbicacionSuspend(context)
 
-            val co2 = distancia * 0.002
-            val esKm0 = distancia < 100
+                        if (ubicacion != null) {
+                            val (latProd, lonProd) = LocationUtils.obtenerCoordenadasPais(pais)
 
-            statsViewModel.agregarProducto(
-                co2 = co2,
-                km = distancia,
-                esKm0 = esKm0
-            )
+                            val distancia = LocationUtils.calcularDistancia(
+                                ubicacion.latitude, ubicacion.longitude,
+                                latProd, lonProd
+                            )
+
+                            // 4. CÁLCULO DE CO2 (lógica interna)
+                            val co2 = distancia * 0.0008
+                            val esKm0 = distancia < 100
+
+                            // 5. ACTUALIZAR UI con resultados
+                            statsViewModel.agregarProducto(co2, distancia, esKm0)
+
+                            // Mostrar nombre real del producto
+                            // nombreProducto = nombre
+                        }
+                    }
+                } catch (e: Exception) {
+                    // Error de red o API
+                }
+            }
         }
     }
 
@@ -92,7 +106,7 @@ fun ProductoScreen(onVolverClick: () -> Unit, viewModel: CameraViewModel, statsV
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
 
-            AppCard(modifier = Modifier.fillMaxWidth()) {
+            Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text("Yogur de Fresa", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(4.dp))
@@ -115,7 +129,7 @@ fun ProductoScreen(onVolverClick: () -> Unit, viewModel: CameraViewModel, statsV
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                AppCard(modifier = Modifier.weight(1f)) {
+                Card(modifier = Modifier.weight(1f)) {
                     Column(
                         modifier = Modifier.padding(14.dp).fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -124,7 +138,7 @@ fun ProductoScreen(onVolverClick: () -> Unit, viewModel: CameraViewModel, statsV
                         Text("Distancia", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
-                AppCard(modifier = Modifier.weight(1f)) {
+                Card(modifier = Modifier.weight(1f)) {
                     Column(
                         modifier = Modifier.padding(14.dp).fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -135,7 +149,7 @@ fun ProductoScreen(onVolverClick: () -> Unit, viewModel: CameraViewModel, statsV
                 }
             }
 
-            AppCard(modifier = Modifier.fillMaxWidth()) {
+            Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text("Esto equivale a...", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                     Spacer(modifier = Modifier.height(10.dp))
@@ -153,7 +167,7 @@ fun ProductoScreen(onVolverClick: () -> Unit, viewModel: CameraViewModel, statsV
                 }
             }
 
-            AppCard(modifier = Modifier.fillMaxWidth()) {
+            Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text("Tu ahorro acumulado", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                     Spacer(modifier = Modifier.height(8.dp))

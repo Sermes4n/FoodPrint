@@ -1,5 +1,6 @@
 package com.example.proyectofinal.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -16,8 +17,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.proyectofinal.R
 import com.example.proyectofinal.navigation.Routes
 
 @Composable
@@ -41,11 +45,11 @@ fun BottomBar(navController: NavHostController) {
         }
 
         IconButton(onClick = { navController.navigate(Routes.STATS) }) {
-            Icon(
-                Icons.Default.Add,
-                contentDescription = "Stats",
-                tint = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.size(28.dp)
+            Image(
+                painter = painterResource(id = R.drawable.stats_icon),
+                contentDescription = "Mi imagen",
+                modifier = Modifier.size(28.dp),
+                contentScale = ContentScale.Crop
             )
         }
 
