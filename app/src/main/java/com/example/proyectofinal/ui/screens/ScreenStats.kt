@@ -1,108 +1,243 @@
 package com.example.proyectofinal.ui.screens
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.proyectofinal.ui.components.StatsViewModel
+import com.example.proyectofinal.data.EscaneoConProducto
+import com.example.proyectofinal.data.SupabaseRepository
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StatsScreen(viewModel: StatsViewModel = viewModel()) {
-    val porcentaje = viewModel.porcentajeKm0()
-    val co2Ahorrado = viewModel.co2Ahorrado
-    val kmReducidos = viewModel.kmReducidos
-    val kmCocheEvitados = (co2Ahorrado / 0.12).toInt() // 0.12kg CO2 por km en coche
+fun StatsScreen() {
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            "TU IMPACTO Y EVOLUCIÓN",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 24.dp)
-        )
+    var escaneos by remember { mutableStateOf<List<EscaneoConProducto>>(emptyList()) }
+    val scope = rememberCoroutineScope()
 
-        // Gráfico circular
-        Box(
-            modifier = Modifier.size(180.dp),
-            contentAlignment = Alignment.Center
+    fun cargar() {
+        scope.launch {
+            try { escaneos = SupabaseRepository.getEscaneos() } catch (_: Exception) { }
+        }
+    }
+
+    LaunchedEffect(Unit) { cargar() }
+
+    val totalProductos     = escaneos.size
+    val productosKm0       = escaneos.count { (it.distanciaKm ?: Float.MAX_VALUE) < 100f }
+    val porcentaje         = if (totalProductos == 0) 0f else productosKm0.toFloat() / totalProductos
+    val co2Total           = escaneos.sumOf { it.co2Kg ?: it.producto.co2Kg }
+    val kmTotales          = escaneos.sumOf { (it.distanciaKm ?: 0f).toDouble() }
+    val kmCocheEquivalentes = (co2Total / 0.21).toInt()
+    val co2Medio           = if (totalProductos == 0) 0.0 else co2Total / totalProductos
+
+    Scaffold(
+        contentWindowInsets = WindowInsets(0),
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text       = "Tu Impacto",
+                        fontWeight = FontWeight.Bold,
+                        fontSize   = 20.sp
+                    )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor     = MaterialTheme.colorScheme.primary,
+                    titleContentColor  = MaterialTheme.colorScheme.onPrimary
+                )
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            CircularProgressIndicator(
-                progress = porcentaje,
-                modifier = Modifier.fillMaxSize(),
-                strokeWidth = 16.dp,
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+            Spacer(modifier = Modifier.height(28.dp))
+
+            // ── KM 0 ring ────────────────────────────────────────────────────
+            Box(
+                modifier        = Modifier.size(200.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    progress    = { porcentaje },
+                    modifier    = Modifier.fillMaxSize(),
+                    strokeWidth = 18.dp,
+                    color       = MaterialTheme.colorScheme.primary,
+                    trackColor  = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text       = "${(porcentaje * 100).toInt()}%",
+                        fontSize   = 40.sp,
+                        fontWeight = FontWeight.Bold,
+                        color      = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text  = "KM 0",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(
+                text  = "$productosKm0 de $totalProductos productos son de proximidad",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    "${(porcentaje * 100).toInt()}%",
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    "PRODUCTOS KM 0",
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            Spacer(modifier = Modifier.height(28.dp))
+
+            // ── CO₂ + KM cards ──────────────────────────────────────────────
+            Row(
+                modifier              = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // CO₂ total
+                Card(
+                    modifier = Modifier.weight(1f),
+                    shape    = RoundedCornerShape(16.dp),
+                    colors   = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Column(modifier = Modifier.padding(18.dp)) {
+                        Text(
+                            text  = "CO₂ TOTAL",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.65f)
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text       = "${"%.1f".format(co2Total)}",
+                            fontSize   = 34.sp,
+                            fontWeight = FontWeight.Bold,
+                            color      = MaterialTheme.colorScheme.primary,
+                            lineHeight = 34.sp
+                        )
+                        Text(
+                            text  = "kg registrados",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.60f)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text  = "≈ $kmCocheEquivalentes km en coche",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)
+                        )
+                    }
+                }
+
+                // KM total
+                Card(
+                    modifier = Modifier.weight(1f),
+                    shape    = RoundedCornerShape(16.dp)
+                ) {
+                    Column(modifier = Modifier.padding(18.dp)) {
+                        Text(
+                            text  = "KM TOTALES",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text       = "${kmTotales.toInt()}",
+                            fontSize   = 34.sp,
+                            fontWeight = FontWeight.Bold,
+                            color      = MaterialTheme.colorScheme.onSurface,
+                            lineHeight = 34.sp
+                        )
+                        Text(
+                            text  = "km de transporte",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text  = "$totalProductos productos totales",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        )
+                    }
+                }
             }
-        }
 
-        Text(
-            "de tus productos son de proximidad",
-            fontSize = 12.sp,
-            modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
-        )
+            Spacer(modifier = Modifier.height(12.dp))
 
-        // Card CO2
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9))
-        ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Text("CO₂ ESTALVIAT FINS ARA", fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                Text("${co2Ahorrado.toInt()} Kg", fontSize = 36.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2E7D32))
-                Text("Equival a ${kmCocheEvitados} km en cotxe evitats", fontSize = 13.sp, color = Color.Gray)
+            // ── Bottom stat cards ────────────────────────────────────────────
+            Row(
+                modifier              = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Products scanned
+                Card(
+                    modifier = Modifier.weight(1f),
+                    shape    = RoundedCornerShape(16.dp)
+                ) {
+                    Column(
+                        modifier            = Modifier
+                            .fillMaxWidth()
+                            .padding(18.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text       = "$totalProductos",
+                            fontSize   = 30.sp,
+                            fontWeight = FontWeight.Bold,
+                            color      = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text  = "Escaneados",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                // Average CO₂
+                Card(
+                    modifier = Modifier.weight(1f),
+                    shape    = RoundedCornerShape(16.dp)
+                ) {
+                    Column(
+                        modifier            = Modifier
+                            .fillMaxWidth()
+                            .padding(18.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text       = "${"%.2f".format(co2Medio)}",
+                            fontSize   = 30.sp,
+                            fontWeight = FontWeight.Bold,
+                            color      = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text  = "kg CO₂ medio",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
-        }
 
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Card Kilómetros
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD))
-        ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Text("KILÒMETRES DE TRANSPORT REDUÏTS", fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                Text("${kmReducidos.toInt()} Km", fontSize = 36.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1565C0))
-                Text("Amb el teu ajut, el cercle creix", fontSize = 13.sp, color = Color.Gray)
-            }
+            Spacer(modifier = Modifier.height(20.dp))
         }
     }
 }

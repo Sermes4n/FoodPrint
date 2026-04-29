@@ -1,23 +1,20 @@
 package com.example.proyectofinal.ui.components
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -25,49 +22,67 @@ import com.example.proyectofinal.R
 import com.example.proyectofinal.navigation.Routes
 
 @Composable
-fun BottomBar(navController: NavHostController) {
+fun BottomBar(navController: NavHostController, currentRoute: String?) {
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.primary)
-            .padding(vertical = 10.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly
-    ) {
+    val itemColors = NavigationBarItemDefaults.colors(
+        indicatorColor        = MaterialTheme.colorScheme.primaryContainer,
+        selectedIconColor     = MaterialTheme.colorScheme.primary,
+        selectedTextColor     = MaterialTheme.colorScheme.primary,
+        unselectedIconColor   = MaterialTheme.colorScheme.onSurfaceVariant,
+        unselectedTextColor   = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 
-        IconButton(onClick = { navController.navigate(Routes.HOME) }) {
-            Icon(
-                Icons.Default.Home,
-                contentDescription = "Home",
-                tint = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.size(28.dp)
+    Column {
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
+        NavigationBar(
+            containerColor = MaterialTheme.colorScheme.surface,
+            tonalElevation = 0.dp,
+        ) {
+            NavigationBarItem(
+                selected = currentRoute == Routes.HOME,
+                onClick  = {
+                    if (currentRoute != Routes.HOME)
+                        navController.navigate(Routes.HOME) { launchSingleTop = true }
+                },
+                icon   = { Icon(Icons.Default.Home, contentDescription = "Inicio") },
+                label  = { Text("Inicio") },
+                colors = itemColors
             )
-        }
-
-        IconButton(onClick = { navController.navigate(Routes.STATS) }) {
-            Image(
-                painter = painterResource(id = R.drawable.stats_icon),
-                contentDescription = "Mi imagen",
-                modifier = Modifier.size(28.dp),
-                contentScale = ContentScale.Crop
+            NavigationBarItem(
+                selected = currentRoute == Routes.STATS,
+                onClick  = {
+                    if (currentRoute != Routes.STATS)
+                        navController.navigate(Routes.STATS) { launchSingleTop = true }
+                },
+                icon = {
+                    Icon(
+                        painter            = painterResource(id = R.drawable.stats_icon),
+                        contentDescription = "Estadísticas",
+                        modifier           = Modifier.size(24.dp)
+                    )
+                },
+                label  = { Text("Stats") },
+                colors = itemColors
             )
-        }
-
-        IconButton(onClick = { navController.navigate(Routes.HISTORIAL) }) {
-            Icon(
-                Icons.Default.Refresh,
-                contentDescription = "Historial",
-                tint = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.size(28.dp)
+            NavigationBarItem(
+                selected = currentRoute == Routes.HISTORIAL,
+                onClick  = {
+                    if (currentRoute != Routes.HISTORIAL)
+                        navController.navigate(Routes.HISTORIAL) { launchSingleTop = true }
+                },
+                icon   = { Icon(Icons.Default.List, contentDescription = "Historial") },
+                label  = { Text("Historial") },
+                colors = itemColors
             )
-        }
-
-        IconButton(onClick = { navController.navigate(Routes.CUENTA) }) {
-            Icon(
-                Icons.Default.Person,
-                contentDescription = "Cuenta",
-                tint = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.size(28.dp)
+            NavigationBarItem(
+                selected = currentRoute == Routes.CUENTA,
+                onClick  = {
+                    if (currentRoute != Routes.CUENTA)
+                        navController.navigate(Routes.CUENTA) { launchSingleTop = true }
+                },
+                icon   = { Icon(Icons.Default.Person, contentDescription = "Mi cuenta") },
+                label  = { Text("Cuenta") },
+                colors = itemColors
             )
         }
     }
